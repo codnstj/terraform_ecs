@@ -34,7 +34,7 @@ data "template_file" "service" {
   }
 }
 
-resource "aws_ecs_task_definition" "service" {
+resource "aws_ecs_task_definition" "hr-task_definition" {
   family = "staged"
   network_mode = "awsvpc"
   execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
@@ -45,5 +45,22 @@ resource "aws_ecs_task_definition" "service" {
   tags = {
     "Environment" = "staging"
     Application = var.app_name
+  }
+}
+
+resource "aws_ecs_cluster" "hr-ecs" {
+  name = "hr-ecs-cluster"
+}
+
+resource "aws_ecs_service" "hr-ecs" {
+  name = "hr_ecs"
+  cluster = aws_ecs_cluster.hr-ecs.id
+  task_definition = aws_ecs_task_definition.hr-task_definition.arn
+  desired_count = 0
+  launch_type = "FARGATE"
+
+  network_configuration {
+    security_groups = [aws_security_group.ecs_tasks.id]
+    subnets = aws_subnet.priv
   }
 }
